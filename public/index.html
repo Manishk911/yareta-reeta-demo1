@@ -8,24 +8,45 @@
     :root { --bg:#0b0f1a; --fg:#fff; --accent:#00ffd1; }
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
-    main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 1rem 220px;box-sizing:border-box}
+    main{
+      min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:3rem 1rem 220px;box-sizing:border-box
+    }
     h1{font-size:1.5rem;margin:0}
     p{font-size:1rem;max-width:520px;line-height:1.5;margin:.75rem auto 0;opacity:.9}
-    a.btn{display:inline-block;margin-top:1rem;background:var(--accent);color:#000;padding:.75rem 1.5rem;border-radius:10px;font-weight:700;text-decoration:none}
+    a.btn{
+      display:inline-block;margin-top:1rem;background:var(--accent);color:#000;
+      padding:.75rem 1.5rem;border-radius:10px;font-weight:700;text-decoration:none
+    }
 
-    /* Avatar bubble */
+    /* Avatar bubble (left/bottom like your snippet) */
     #heygen-streaming-embed{
-      z-index:40;position:fixed;right:24px;bottom:24px;width:180px;height:180px;
-      border-radius:50%;border:2px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.18);
+      z-index:9999;position:fixed;left:40px;bottom:40px;width:200px;height:200px;
+      border-radius:50%;border:2px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.12);
       overflow:hidden;background:#000;cursor:pointer;
-      transform-origin:bottom right;transform:scale(1);
+      transform-origin:bottom left;transform:scale(1);
       transition:transform .28s ease,opacity .2s ease,visibility .2s ease,border-radius .28s ease;
       opacity:0;visibility:hidden;
     }
     #heygen-streaming-embed.show{opacity:1;visibility:visible}
-    #heygen-streaming-embed.talking{transform:scale(2)}  /* auto while speaking */
-    #heygen-streaming-embed.fullsize{transform:scale(3)} /* click → 3x */
-    #heygen-streaming-container,#heygen-streaming-container iframe{width:100%;height:100%;display:block;border:0}
+
+    /* Optional “expanded” state if the embed posts show/hide */
+    #heygen-streaming-embed.expand{border:0;border-radius:8px}
+    @media (max-width:539px){
+      #heygen-streaming-embed.expand{height:266px;width:96%}
+    }
+    @media (min-width:540px){
+      #heygen-streaming-embed.expand{height:366px;width:calc(366px * 16 / 9)}
+    }
+
+    /* Auto: speaking => 2x */
+    #heygen-streaming-embed.talking{transform:scale(2)}
+    /* Manual: click => 3x (wins if both set) */
+    #heygen-streaming-embed.fullsize{transform:scale(3)}
+
+    #heygen-streaming-container,#heygen-streaming-container iframe{
+      width:100%;height:100%;display:block;border:0
+    }
     @media (prefers-reduced-motion:reduce){#heygen-streaming-embed{transition:none}}
   </style>
 </head>
@@ -41,16 +62,15 @@
   <!-- Optional: override content via URL params ?title=&report=&share= -->
   <script>
     (function(){
-      var qs=new URLSearchParams(location.search);
-      var t=qs.get('title');  if(t) document.getElementById('title').textContent=t;
-      var r=qs.get('report'); if(r) document.getElementById('reportLink').href=r;
-      window.HEYGEN_SHARE=(qs.get('share') ||
-        'eyJxdWFsaXR5IjoiaGlnaCIsImF2YXRhck5hbWUiOiJLYXR5YV9DaGFpcl9TaXR0aW5nX3B1YmxpYyIsInByZXZpZXdJbWciOiJodHRwczovL2ZpbGVzMi5oZXlnZW4uYWkvYXZhdGFyL3YzL2IxZmY1ZWRiZjk2MjQyZTZhYzk0NjkyMjdkZjQwOTI0XzU1MzYwL3ByZXZpZXdfdGFyZ2V0LndlYnAiLCJuZWVkUmVtb3ZlQmFja2dyb3VuZCI6ZmFsc2UsImtub3dsZWRnZUJhc2VJZCI6IjBlMjYwNDNkMmE4ODQ3MjJiMzY1N2UzMGYzYTk1NDM0IiwidXNlcm5hbWUiOiI2MDBmZWJhMjdhNmU0ODg5OWZlMDI2NDdlYWNkODFlMSJ9'
-      ).trim();
-    })();
-  </script>
+      const qs = new URLSearchParams(location.search);
+      const t = qs.get('title');  if (t)  document.getElementById('title').textContent = t;
+      const r = qs.get('report'); if (r)  document.getElementById('reportLink').href = r;
 
-  <!-- Embed + behavior -->
-  <script>!function(window){const host="https://labs.heygen.com",url=host+"/guest/streaming-embed?share=eyJxdWFsaXR5IjoiaGlnaCIsImF2YXRhck5hbWUiOiJLYXR5YV9Qcm9mZXNzaW9uYWxMb29rX3B1%0D%0AYmxpYyIsInByZXZpZXdJbWciOiJodHRwczovL2ZpbGVzMi5oZXlnZW4uYWkvYXZhdGFyL3YzLzM0%0D%0AOGRkZjUwM2M2NTRiOWJiYmI4YmVhOWY5MjEwZWFkXzU1ODcwL3ByZXZpZXdfdGFyZ2V0LndlYnAi%0D%0ALCJuZWVkUmVtb3ZlQmFja2dyb3VuZCI6dHJ1ZSwia25vd2xlZGdlQmFzZUlkIjoiZmU4ODU2MTM2%0D%0AOWY4NGMzZGE1YzRlNWYzZGJjMjE2OWYiLCJ1c2VybmFtZSI6IjYwMGZlYmEyN2E2ZTQ4ODk5ZmUw%0D%0AMjY0N2VhY2Q4MWUxIn0%3D&inIFrame=1",clientWidth=document.body.clientWidth,wrapDiv=document.createElement("div");wrapDiv.id="heygen-streaming-embed";const container=document.createElement("div");container.id="heygen-streaming-container";const stylesheet=document.createElement("style");stylesheet.innerHTML=\n  #heygen-streaming-embed {\n    z-index: 9999;\n    position: fixed;\n    left: 40px;\n    bottom: 40px;\n    width: 200px;\n    height: 200px;\n    border-radius: 50%;\n    border: 2px solid #fff;\n    box-shadow: 0px 8px 24px 0px rgba(0, 0, 0, 0.12);\n    transition: all linear 0.1s;\n    overflow: hidden;\n\n    opacity: 0;\n    visibility: hidden;\n  }\n  #heygen-streaming-embed.show {\n    opacity: 1;\n    visibility: visible;\n  }\n  #heygen-streaming-embed.expand {\n    ${clientWidth<540?"height: 266px; width: 96%; left: 50%; transform: translateX(-50%);":"height: 366px; width: calc(366px * 16 / 9);"}\n    border: 0;\n    border-radius: 8px;\n  }\n  #heygen-streaming-container {\n    width: 100%;\n    height: 100%;\n  }\n  #heygen-streaming-container iframe {\n    width: 100%;\n    height: 100%;\n    border: 0;\n  }\n  ;const iframe=document.createElement("iframe");iframe.allowFullscreen=!1,iframe.title="Streaming Embed",iframe.role="dialog",iframe.allow="microphone",iframe.src=url;let visible=!1,initial=!1;window.addEventListener("message",(e=>{e.origin===host&&e.data&&e.data.type&&"streaming-embed"===e.data.type&&("init"===e.data.action?(initial=!0,wrapDiv.classList.toggle("show",initial)):"show"===e.data.action?(visible=!0,wrapDiv.classList.toggle("expand",visible)):"hide"===e.data.action&&(visible=!1,wrapDiv.classList.toggle("expand",visible)))})),container.appendChild(iframe),wrapDiv.appendChild(stylesheet),wrapDiv.appendChild(container),document.body.appendChild(wrapDiv)}(globalThis);</script>
-</body>
-</html>
+      // Your new Heygen share token (already URL-encoded). Override with ?share=... if you want.
+      const DEFAULT_SHARE_ENCODED =
+        'eyJxdWFsaXR5IjoiaGlnaCIsImF2YXRhck5hbWUiOiJLYXR5YV9Qcm9mZXNzaW9uYWxMb29rX3B1%0AYmxpYyIsInByZXZpZXdJbWciOiJodHRwczovL2ZpbGVzMi5oZXlnZW4uYWkvYXZhdGFyL3YzLzM0%0AOGRkZjUwM2M2NTRiOWJiYmI4YmVhOWY5MjEwZWFkXzU1ODcwL3ByZXZpZXdfdGFyZ2V0LndlYnAi%0ALCJuZWVkUmVtb3ZlQmFja2dyb3VuZCI6dHJ1ZSwia25vd2xlZGdlQmFzZUlkIjoiZmU4ODU2MTM2%0AOWY4NGMzZGE1YzRlNWYzZGJjMjE2OWYiLCJ1c2VybmFtZSI6IjYwMGZlYmEyN2E2ZTQ4ODk5ZmUw%0AMjY0N2VhY2Q4MWUxIn0%3D';
+
+      // If ?share= is provided, we URL-encode it; otherwise use your already-encoded token.
+      const overrideShare = qs.get('share');
+      window.HEYGEN_SHARE_ENC = overrideShare ? encodeURIComponent(overrideShare) : DEFAULT_SHARE_ENCODED;
+    })
