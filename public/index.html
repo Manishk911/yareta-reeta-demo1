@@ -30,7 +30,7 @@
     }
     #heygen-streaming-embed.show{opacity:1;visibility:visible}
 
-    /* Optional “expanded” state if the embed posts show/hide */
+    /* Expanded state if the embed posts show/hide */
     #heygen-streaming-embed.expand{border:0;border-radius:8px}
     @media (max-width:539px){
       #heygen-streaming-embed.expand{height:266px;width:96%}
@@ -66,11 +66,80 @@
       const t = qs.get('title');  if (t)  document.getElementById('title').textContent = t;
       const r = qs.get('report'); if (r)  document.getElementById('reportLink').href = r;
 
-      // Your new Heygen share token (already URL-encoded). Override with ?share=... if you want.
-      const DEFAULT_SHARE_ENCODED =
+      // Use ?share=... if provided; otherwise use YOUR exact token (already percent-encoded).
+      window.HEYGEN_SHARE_RAW =
+        qs.get('share') ||
         'eyJxdWFsaXR5IjoiaGlnaCIsImF2YXRhck5hbWUiOiJLYXR5YV9Qcm9mZXNzaW9uYWxMb29rX3B1%0AYmxpYyIsInByZXZpZXdJbWciOiJodHRwczovL2ZpbGVzMi5oZXlnZW4uYWkvYXZhdGFyL3YzLzM0%0AOGRkZjUwM2M2NTRiOWJiYmI4YmVhOWY5MjEwZWFkXzU1ODcwL3ByZXZpZXdfdGFyZ2V0LndlYnAi%0ALCJuZWVkUmVtb3ZlQmFja2dyb3VuZCI6dHJ1ZSwia25vd2xlZGdlQmFzZUlkIjoiZmU4ODU2MTM2%0AOWY4NGMzZGE1YzRlNWYzZGJjMjE2OWYiLCJ1c2VybmFtZSI6IjYwMGZlYmEyN2E2ZTQ4ODk5ZmUw%0AMjY0N2VhY2Q4MWUxIn0%3D';
+      // IMPORTANT: we do NOT re-encode this; we pass it through exactly as-is.
+    })();
+  </script>
 
-      // If ?share= is provided, we URL-encode it; otherwise use your already-encoded token.
-      const overrideShare = qs.get('share');
-      window.HEYGEN_SHARE_ENC = overrideShare ? encodeURIComponent(overrideShare) : DEFAULT_SHARE_ENCODED;
-    })
+  <!-- Embed + behavior -->
+  <script>
+    (function () {
+      const host = "https://labs.heygen.com";
+      const url  = host + "/guest/streaming-embed?share=" + (window.HEYGEN_SHARE_RAW || "") + "&inIFrame=1";
+
+      // Wrapper + container
+      const wrap = document.createElement("div");
+      wrap.id = "heygen-streaming-embed";
+
+      const container = document.createElement("div");
+      container.id = "heygen-streaming-container";
+
+      // Iframe
+      const iframe = document.createElement("iframe");
+      iframe.src = url;
+      iframe.title = "Streaming Embed";
+      iframe.allow = "microphone; camera; clipboard-read; clipboard-write; autoplay; encrypted-media;";
+      iframe.referrerPolicy = "origin-when-cross-origin";
+
+      // Mount
+      container.appendChild(iframe);
+      wrap.appendChild(container);
+      document.body.appendChild(wrap);
+
+      // Reveal when loaded (fallback so you always see the bubble)
+      iframe.addEventListener("load", function(){ wrap.classList.add("show"); });
+
+      // Click → toggle 3x
+      document.addEventListener("click", function (e) {
+        const w = e.target && e.target.closest ? e.target.closest("#heygen-streaming-embed") : null;
+        if (w) w.classList.toggle("fullsize");
+      });
+
+      // Handle Heygen "streaming-embed" init/show/hide events (their native messages)
+      window.addEventListener("message", function (e) {
+        if (e.source !== iframe.contentWindow) return;
+        const d = e.data;
+        if (d && d.type === "streaming-embed") {
+          if (d.action === "init")  wrap.classList.add("show");
+          if (d.action === "show")  wrap.classList.add("expand");
+          if (d.action === "hide")  wrap.classList.remove("expand");
+        }
+      });
+
+      // Auto 2x while speaking (robust to event-name variants)
+      (function enableTalkingScale(){
+        let deb = null;
+        function setTalk(v){ wrap.classList.toggle("talking", v); }
+        window.addEventListener("message", function (e) {
+          if (e.source !== iframe.contentWindow) return;
+          let d = e.data;
+          if (typeof d === "string") { try { d = JSON.parse(d); } catch {} }
+          const raw = (d && (d.type || d.event || d.name || (d.detail && (d.detail.type || d.detail.event)))) || "";
+          const t = String(raw).toUpperCase();
+
+          const start = t === "AVATAR_START_TALKING" || t === "TALKING_START" || t === "AVATAR.TALKING_START" || raw === "avatar_start_talking";
+          const stop  = t === "AVATAR_STOP_TALKING"  || t === "TALKING_END"   || t === "AVATAR.TALKING_STOP"  || raw === "avatar_stop_talking";
+          const tick  = t === "AVATAR_TALKING_MESSAGE" || raw === "avatar_talking_message";
+
+          if (start) setTalk(true);
+          else if (stop) setTalk(false);
+          else if (tick) { setTalk(true); clearTimeout(deb); deb = setTimeout(function(){ setTalk(false); }, 900); }
+        });
+      })();
+    })();
+  </script>
+</body>
+</html>
