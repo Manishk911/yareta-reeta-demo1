@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Reeta — AI Org Psychologist (Demo)</title>
+  <style>
+    :root { --bg:#0b0f1a; --fg:#fff; --accent:#00ffd1; }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
+    main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 1rem 220px;box-sizing:border-box}
+    h1{font-size:1.5rem;margin:0}
+    p{font-size:1rem;max-width:520px;line-height:1.5;margin:.75rem auto 0;opacity:.9}
+    a.btn{display:inline-block;margin-top:1rem;background:var(--accent);color:#000;padding:.75rem 1.5rem;border-radius:10px;font-weight:700;text-decoration:none}
+
+    /* Avatar bubble */
+    #heygen-streaming-embed{
+      z-index:40;position:fixed;right:24px;bottom:24px;width:180px;height:180px;
+      border-radius:50%;border:2px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.18);
+      overflow:hidden;background:#000;cursor:pointer;
+      transform-origin:bottom right;transform:scale(1);
+      transition:transform .28s ease,opacity .2s ease,visibility .2s ease,border-radius .28s ease;
+      opacity:0;visibility:hidden;
+    }
+    #heygen-streaming-embed.show{opacity:1;visibility:visible}
+    #heygen-streaming-embed.talking{transform:scale(2)}  /* auto while speaking */
+    #heygen-streaming-embed.fullsize{transform:scale(3)} /* click → 3x */
+    #heygen-streaming-container,#heygen-streaming-container iframe{width:100%;height:100%;display:block;border:0}
+    @media (prefers-reduced-motion:reduce){#heygen-streaming-embed{transition:none}}
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="title">Meet Reeta — Your AI-Powered Management Due Diligence Psychologist</h1>
+    <p>Powered by Yareta.ai, trained on proprietary behavioral science and investor knowledge of the AsiaVerify Management.</p>
+    <a id="reportLink" class="btn"
+       href="https://drive.google.com/file/d/1lkhhtMlkDvWcuIjdbAO3WOBOcLmlWR48/view?usp=sharing"
+       target="_blank" rel="noopener noreferrer">View Report</a>
+  </main>
+
+  <!-- Optional: override content via URL params ?title=&report=&share= -->
+  <script>
+    (function(){
+      var qs=new URLSearchParams(location.search);
+      var t=qs.get('title');  if(t) document.getElementById('title').textContent=t;
+      var r=qs.get('report'); if(r) document.getElementById('reportLink').href=r;
+      window.HEYGEN_SHARE=(qs.get('share') ||
+        'eyJxdWFsaXR5IjoiaGlnaCIsImF2YXRhck5hbWUiOiJLYXR5YV9DaGFpcl9TaXR0aW5nX3B1YmxpYyIsInByZXZpZXdJbWciOiJodHRwczovL2ZpbGVzMi5oZXlnZW4uYWkvYXZhdGFyL3YzL2IxZmY1ZWRiZjk2MjQyZTZhYzk0NjkyMjdkZjQwOTI0XzU1MzYwL3ByZXZpZXdfdGFyZ2V0LndlYnAiLCJuZWVkUmVtb3ZlQmFja2dyb3VuZCI6ZmFsc2UsImtub3dsZWRnZUJhc2VJZCI6IjBlMjYwNDNkMmE4ODQ3MjJiMzY1N2UzMGYzYTk1NDM0IiwidXNlcm5hbWUiOiI2MDBmZWJhMjdhNmU0ODg5OWZlMDI2NDdlYWNkODFlMSJ9'
+      ).trim();
+    })();
+  </script>
+
+  <!-- Embed + behavior -->
+  <script>
+    (function(){
+      var share=(window.HEYGEN_SHARE||'').trim();
+      var url="https://labs.heygen.com/guest/streaming-embed?share="+encodeURIComponent(share)+"&inIFrame=1";
+
+      var wrap=document.createElement('div'); wrap.id='heygen-streaming-embed';
+      var container=document.createElement('div'); container.id='heygen-streaming-container';
+      var iframe=document.createElement('iframe');
+      iframe.src=url;
+      iframe.allow="microphone; camera; clipboard-read; clipboard-write; autoplay; encrypted-media;";
+      iframe.referrerPolicy="origin-when-cross-origin";
+
+      container.appendChild(iframe); wrap.appendChild(container); document.body.appendChild(wrap);
+      iframe.addEventListener('load',function(){ wrap.classList.add('show'); });
+
+      // Click → toggle 3x
+      document.addEventListener('click',function(e){
+        var w=e.target&&e.target.closest?e.target.closest('#heygen-streaming-embed'):null;
+        if(w) w.classList.toggle('fullsize');
+      });
+
+      // Auto 2x while speaking (only accept messages from our iframe)
+      var deb=null;
+      function setTalk(v){ wrap.classList.toggle('talking',v); }
+      window.addEventListener('message',function(e){
+        if(e.source!==iframe.contentWindow) return;
+        var d=e.data; if(typeof d==='string'){ try{ d=JSON.parse(d); }catch{} }
+        var raw=(d&&(d.type||d.event||d.name||(d.detail&&(d.detail.type||d.detail.event))))||"";
+        var t=String(raw).toUpperCase();
+        var start=t==="AVATAR_START_TALKING"||t==="TALKING_START"||t==="AVATAR.TALKING_START"||raw==="avatar_start_talking";
+        var stop =t==="AVATAR_STOP_TALKING" ||t==="TALKING_END"   ||t==="AVATAR.TALKING_STOP" ||raw==="avatar_stop_talking";
+        var tick =t==="AVATAR_TALKING_MESSAGE"||raw==="avatar_talking_message";
+        if(start) setTalk(true);
+        else if(stop) setTalk(false);
+        else if(tick){ setTalk(true); clearTimeout(deb); deb=setTimeout(function(){ setTalk(false); },900); }
+      });
+    })();
+  </script>
+</body>
+</html>
