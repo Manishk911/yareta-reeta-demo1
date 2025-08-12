@@ -51,43 +51,6 @@
   </script>
 
   <!-- Embed + behavior -->
-  <script>
-    (function(){
-      var share=(window.HEYGEN_SHARE||'').trim();
-      var url="https://labs.heygen.com/guest/streaming-embed?share="+encodeURIComponent(share)+"&inIFrame=1";
-
-      var wrap=document.createElement('div'); wrap.id='heygen-streaming-embed';
-      var container=document.createElement('div'); container.id='heygen-streaming-container';
-      var iframe=document.createElement('iframe');
-      iframe.src=url;
-      iframe.allow="microphone; camera; clipboard-read; clipboard-write; autoplay; encrypted-media;";
-      iframe.referrerPolicy="origin-when-cross-origin";
-
-      container.appendChild(iframe); wrap.appendChild(container); document.body.appendChild(wrap);
-      iframe.addEventListener('load',function(){ wrap.classList.add('show'); });
-
-      // Click → toggle 3x
-      document.addEventListener('click',function(e){
-        var w=e.target&&e.target.closest?e.target.closest('#heygen-streaming-embed'):null;
-        if(w) w.classList.toggle('fullsize');
-      });
-
-      // Auto 2x while speaking (only accept messages from our iframe)
-      var deb=null;
-      function setTalk(v){ wrap.classList.toggle('talking',v); }
-      window.addEventListener('message',function(e){
-        if(e.source!==iframe.contentWindow) return;
-        var d=e.data; if(typeof d==='string'){ try{ d=JSON.parse(d); }catch{} }
-        var raw=(d&&(d.type||d.event||d.name||(d.detail&&(d.detail.type||d.detail.event))))||"";
-        var t=String(raw).toUpperCase();
-        var start=t==="AVATAR_START_TALKING"||t==="TALKING_START"||t==="AVATAR.TALKING_START"||raw==="avatar_start_talking";
-        var stop =t==="AVATAR_STOP_TALKING" ||t==="TALKING_END"   ||t==="AVATAR.TALKING_STOP" ||raw==="avatar_stop_talking";
-        var tick =t==="AVATAR_TALKING_MESSAGE"||raw==="avatar_talking_message";
-        if(start) setTalk(true);
-        else if(stop) setTalk(false);
-        else if(tick){ setTalk(true); clearTimeout(deb); deb=setTimeout(function(){ setTalk(false); },900); }
-      });
-    })();
-  </script>
+  <script>!function(window){const host="https://labs.heygen.com",url=host+"/guest/streaming-embed?share=eyJxdWFsaXR5IjoiaGlnaCIsImF2YXRhck5hbWUiOiJLYXR5YV9Qcm9mZXNzaW9uYWxMb29rX3B1%0D%0AYmxpYyIsInByZXZpZXdJbWciOiJodHRwczovL2ZpbGVzMi5oZXlnZW4uYWkvYXZhdGFyL3YzLzM0%0D%0AOGRkZjUwM2M2NTRiOWJiYmI4YmVhOWY5MjEwZWFkXzU1ODcwL3ByZXZpZXdfdGFyZ2V0LndlYnAi%0D%0ALCJuZWVkUmVtb3ZlQmFja2dyb3VuZCI6dHJ1ZSwia25vd2xlZGdlQmFzZUlkIjoiZmU4ODU2MTM2%0D%0AOWY4NGMzZGE1YzRlNWYzZGJjMjE2OWYiLCJ1c2VybmFtZSI6IjYwMGZlYmEyN2E2ZTQ4ODk5ZmUw%0D%0AMjY0N2VhY2Q4MWUxIn0%3D&inIFrame=1",clientWidth=document.body.clientWidth,wrapDiv=document.createElement("div");wrapDiv.id="heygen-streaming-embed";const container=document.createElement("div");container.id="heygen-streaming-container";const stylesheet=document.createElement("style");stylesheet.innerHTML=\n  #heygen-streaming-embed {\n    z-index: 9999;\n    position: fixed;\n    left: 40px;\n    bottom: 40px;\n    width: 200px;\n    height: 200px;\n    border-radius: 50%;\n    border: 2px solid #fff;\n    box-shadow: 0px 8px 24px 0px rgba(0, 0, 0, 0.12);\n    transition: all linear 0.1s;\n    overflow: hidden;\n\n    opacity: 0;\n    visibility: hidden;\n  }\n  #heygen-streaming-embed.show {\n    opacity: 1;\n    visibility: visible;\n  }\n  #heygen-streaming-embed.expand {\n    ${clientWidth<540?"height: 266px; width: 96%; left: 50%; transform: translateX(-50%);":"height: 366px; width: calc(366px * 16 / 9);"}\n    border: 0;\n    border-radius: 8px;\n  }\n  #heygen-streaming-container {\n    width: 100%;\n    height: 100%;\n  }\n  #heygen-streaming-container iframe {\n    width: 100%;\n    height: 100%;\n    border: 0;\n  }\n  ;const iframe=document.createElement("iframe");iframe.allowFullscreen=!1,iframe.title="Streaming Embed",iframe.role="dialog",iframe.allow="microphone",iframe.src=url;let visible=!1,initial=!1;window.addEventListener("message",(e=>{e.origin===host&&e.data&&e.data.type&&"streaming-embed"===e.data.type&&("init"===e.data.action?(initial=!0,wrapDiv.classList.toggle("show",initial)):"show"===e.data.action?(visible=!0,wrapDiv.classList.toggle("expand",visible)):"hide"===e.data.action&&(visible=!1,wrapDiv.classList.toggle("expand",visible)))})),container.appendChild(iframe),wrapDiv.appendChild(stylesheet),wrapDiv.appendChild(container),document.body.appendChild(wrapDiv)}(globalThis);</script>
 </body>
 </html>
