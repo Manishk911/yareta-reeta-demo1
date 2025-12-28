@@ -3,19 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Reta — Uncovering what makes people exceptional (Demo)</title>
+  <title>Reta — Start here</title>
   <style>
     :root { --bg:#0b0f1a; --fg:#fff; --accent:#00ffd1; }
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Inter,Arial}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family:system-ui,Segoe UI,Roboto,Inter,Arial;
+    }
     main{
-      min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      text-align:center;padding:3rem 1rem 220px;box-sizing:border-box
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:3rem 1rem 220px;
+      box-sizing:border-box;
     }
     h1{font-size:1.5rem;margin:0}
     p{font-size:1rem;max-width:520px;line-height:1.5;margin:.75rem auto 0;opacity:.9}
 
-    /* --- Launcher button (replaces ugly cropped bubble) --- */
+    /* --- Simple "Start here" launcher --- */
     #reta-launcher{
       position:fixed; left:24px; bottom:24px; z-index:9999;
       display:flex; align-items:center; gap:10px;
@@ -64,24 +75,25 @@
       border:1px solid rgba(255,255,255,.14);
     }
 
-    /* Keep a clean 16:9 stage for the iframe */
+    /* 16:9 stage for the iframe */
     #reta-stage{
       width:100%;
       aspect-ratio:16/9;
       background:#000;
     }
     #reta-stage iframe{
-      width:100%; height:100%;
-      border:0; display:block;
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
     }
 
-    /* Header bar */
+    /* Top bar */
     #reta-bar{
       display:flex; align-items:center; justify-content:space-between;
-      padding:12px 14px;
-      background:linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,0));
       position:absolute; left:0; right:0; top:0;
-      pointer-events:none; /* let clicks go to iframe except buttons */
+      padding:12px 14px;
+      pointer-events:none; /* allow iframe clicks */
     }
     #reta-title{
       pointer-events:none;
@@ -103,13 +115,16 @@
     }
     #reta-close:hover{ background:rgba(255,255,255,.08); }
 
-    /* Mobile: full-screen */
+    /* Mobile: fullscreen */
     @media (max-width:640px){
       #reta-modal .panel{
         width:100vw; height:100vh;
         border-radius:0;
       }
-      #reta-stage{ aspect-ratio:auto; height:100vh; }
+      #reta-stage{
+        aspect-ratio:auto;
+        height:100vh;
+      }
       #reta-title{ display:none; }
     }
 
@@ -121,11 +136,11 @@
 
 <body>
   <main>
-    <h1 id="title">Meet Reta — Uncovering what makes people exceptional</h1>
-    <p>I’m Reta — I detect what makes you exceptional. Let’s start by building your profile in 3 quick questions.</p>
+    <h1>Meet Reta</h1>
+    <p>Tap <b>Start here</b> to chat. I’ll ask 3 quick questions to help build your profile.</p>
   </main>
 
-  <!-- Launcher (looks good, simple) -->
+  <!-- Launcher -->
   <button id="reta-launcher" type="button" aria-haspopup="dialog" aria-controls="reta-modal">
     <span id="reta-dot" aria-hidden="true"></span>
     <span class="text">
@@ -134,16 +149,16 @@
     </span>
   </button>
 
-  <!-- Modal (opens the real module) -->
+  <!-- Modal -->
   <div id="reta-modal" role="dialog" aria-modal="true" aria-label="Reta module">
     <div class="panel">
       <div id="reta-stage">
-        <!-- LiveAvatar embed -->
+        <!-- ✅ NEW EMBED LINK -->
         <iframe
-          src="https://embed.liveavatar.com/v1/e2330fb0-f644-4cf0-b841-98b3bd037224"
-          allow="microphone; autoplay;"
+          src="https://embed.liveavatar.com/v1/477b0ae2-9285-47f4-9833-6146c8fbcad7"
+          allow="microphone"
           title="LiveAvatar Embed"
-          referrerpolicy="origin-when-cross-origin"
+          style="aspect-ratio: 16/9;"
         ></iframe>
       </div>
 
@@ -162,7 +177,6 @@
 
       function openModal(){
         modal.classList.add("show");
-        // prevent background scroll
         document.documentElement.style.overflow = "hidden";
         document.body.style.overflow = "hidden";
       }
@@ -176,12 +190,12 @@
       launcher.addEventListener("click", openModal);
       closeBtn.addEventListener("click", closeModal);
 
-      // Click outside panel to close
+      // Click outside the panel closes
       modal.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
       });
 
-      // ESC to close
+      // ESC closes
       window.addEventListener("keydown", (e) => {
         if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
       });
