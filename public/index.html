@@ -14,133 +14,177 @@
     }
     h1{font-size:1.5rem;margin:0}
     p{font-size:1rem;max-width:520px;line-height:1.5;margin:.75rem auto 0;opacity:.9}
-    a.btn{
-      display:inline-block;margin-top:1rem;background:var(--accent);color:#000;
-      padding:.75rem 1.5rem;border-radius:10px;font-weight:700;text-decoration:none
+
+    /* --- Launcher button (replaces ugly cropped bubble) --- */
+    #reta-launcher{
+      position:fixed; left:24px; bottom:24px; z-index:9999;
+      display:flex; align-items:center; gap:10px;
+      padding:12px 14px; border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      color:#fff; cursor:pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition:transform .15s ease, background .15s ease;
+      user-select:none;
+    }
+    #reta-launcher:hover{ transform:translateY(-1px); background:rgba(255,255,255,.11); }
+    #reta-dot{
+      width:12px;height:12px;border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 0 6px rgba(0,255,209,.12);
+      flex:0 0 auto;
+    }
+    #reta-launcher .text{
+      display:flex; flex-direction:column; line-height:1.1;
+      text-align:left;
+    }
+    #reta-launcher .text strong{ font-size:.95rem; }
+    #reta-launcher .text span{ font-size:.78rem; opacity:.85; }
+
+    /* --- Modal overlay --- */
+    #reta-modal{
+      position:fixed; inset:0; z-index:10000;
+      display:none;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #reta-modal.show{ display:block; }
+
+    #reta-modal .panel{
+      position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:min(960px, 92vw);
+      border-radius:16px;
+      overflow:hidden;
+      background:#000;
+      box-shadow:0 20px 70px rgba(0,0,0,.6);
+      border:1px solid rgba(255,255,255,.14);
     }
 
-    /* Avatar bubble (left/bottom like your snippet) */
-    #heygen-streaming-embed{
-      z-index:9999;position:fixed;left:40px;bottom:40px;width:200px;height:200px;
-      border-radius:50%;border:2px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.12);
-      overflow:hidden;background:#000;cursor:pointer;
-      transform-origin:bottom left;transform:scale(1);
-      transition:transform .28s ease,opacity .2s ease,visibility .2s ease,border-radius .28s ease;
-      opacity:0;visibility:hidden;
+    /* Keep a clean 16:9 stage for the iframe */
+    #reta-stage{
+      width:100%;
+      aspect-ratio:16/9;
+      background:#000;
     }
-    #heygen-streaming-embed.show{opacity:1;visibility:visible}
-
-    /* Expanded state */
-    #heygen-streaming-embed.expand{border:0;border-radius:8px}
-    @media (max-width:539px){
-      #heygen-streaming-embed.expand{height:266px;width:96%}
-    }
-    @media (min-width:540px){
-      #heygen-streaming-embed.expand{height:366px;width:calc(366px * 16 / 9)}
+    #reta-stage iframe{
+      width:100%; height:100%;
+      border:0; display:block;
     }
 
-    /* Auto: speaking => 2x (kept for compatibility; may not trigger with LiveAvatar) */
-    #heygen-streaming-embed.talking{transform:scale(2)}
-    /* Manual: click => 3x */
-    #heygen-streaming-embed.fullsize{transform:scale(3)}
-
-    #heygen-streaming-container,#heygen-streaming-container iframe{
-      width:100%;height:100%;display:block;border:0
+    /* Header bar */
+    #reta-bar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 14px;
+      background:linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,0));
+      position:absolute; left:0; right:0; top:0;
+      pointer-events:none; /* let clicks go to iframe except buttons */
     }
-    @media (prefers-reduced-motion:reduce){#heygen-streaming-embed{transition:none}}
+    #reta-title{
+      pointer-events:none;
+      font-weight:700; font-size:.95rem;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      margin:10px;
+    }
+    #reta-close{
+      pointer-events:auto;
+      margin:10px;
+      width:40px; height:40px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.35);
+      color:#fff; cursor:pointer;
+      display:grid; place-items:center;
+    }
+    #reta-close:hover{ background:rgba(255,255,255,.08); }
+
+    /* Mobile: full-screen */
+    @media (max-width:640px){
+      #reta-modal .panel{
+        width:100vw; height:100vh;
+        border-radius:0;
+      }
+      #reta-stage{ aspect-ratio:auto; height:100vh; }
+      #reta-title{ display:none; }
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      #reta-launcher{ transition:none; }
+    }
   </style>
 </head>
+
 <body>
   <main>
     <h1 id="title">Meet Reta — Uncovering what makes people exceptional</h1>
     <p>I’m Reta — I detect what makes you exceptional. Let’s start by building your profile in 3 quick questions.</p>
   </main>
 
-  <!-- Optional: override content via URL params ?title= -->
+  <!-- Launcher (looks good, simple) -->
+  <button id="reta-launcher" type="button" aria-haspopup="dialog" aria-controls="reta-modal">
+    <span id="reta-dot" aria-hidden="true"></span>
+    <span class="text">
+      <strong>Start here</strong>
+      <span>Talk to Reta</span>
+    </span>
+  </button>
+
+  <!-- Modal (opens the real module) -->
+  <div id="reta-modal" role="dialog" aria-modal="true" aria-label="Reta module">
+    <div class="panel">
+      <div id="reta-stage">
+        <!-- LiveAvatar embed -->
+        <iframe
+          src="https://embed.liveavatar.com/v1/e2330fb0-f644-4cf0-b841-98b3bd037224"
+          allow="microphone; autoplay;"
+          title="LiveAvatar Embed"
+          referrerpolicy="origin-when-cross-origin"
+        ></iframe>
+      </div>
+
+      <div id="reta-bar">
+        <div id="reta-title">Reta — Start here</div>
+        <button id="reta-close" type="button" aria-label="Close">✕</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function(){
-      const qs = new URLSearchParams(location.search);
-      const t = qs.get('title');
-      if (t) document.getElementById('title').textContent = t;
-    })();
-  </script>
+      const launcher = document.getElementById("reta-launcher");
+      const modal = document.getElementById("reta-modal");
+      const closeBtn = document.getElementById("reta-close");
 
-  <!-- Embed + behavior (LiveAvatar) -->
-  <script>
-    (function () {
-      // ✅ NEW LiveAvatar embed link
-      const url = "https://embed.liveavatar.com/v1/e2330fb0-f644-4cf0-b841-98b3bd037224";
+      function openModal(){
+        modal.classList.add("show");
+        // prevent background scroll
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+      }
 
-      // Wrapper + container
-      const wrap = document.createElement("div");
-      wrap.id = "heygen-streaming-embed";
+      function closeModal(){
+        modal.classList.remove("show");
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+      }
 
-      const container = document.createElement("div");
-      container.id = "heygen-streaming-container";
+      launcher.addEventListener("click", openModal);
+      closeBtn.addEventListener("click", closeModal);
 
-      // Iframe (equivalent to: <iframe src="..." allow="microphone" title="LiveAvatar Embed" style="aspect-ratio:16/9;"></iframe>)
-      const iframe = document.createElement("iframe");
-      iframe.src = url;
-      iframe.title = "LiveAvatar Embed";
-      iframe.allow = "microphone; autoplay;";
-      iframe.referrerPolicy = "origin-when-cross-origin";
-
-      // Mount
-      container.appendChild(iframe);
-      wrap.appendChild(container);
-      document.body.appendChild(wrap);
-
-      // Reveal when loaded (so you always see the bubble)
-      iframe.addEventListener("load", function(){ wrap.classList.add("show"); });
-
-      // Expand when user interacts with the iframe (clicking mic inside iframe won't bubble to parent)
-      iframe.addEventListener("focus", () => wrap.classList.add("expand"));
-      iframe.addEventListener("blur",  () => wrap.classList.remove("expand"));
-
-      // More robust: keep expanded while iframe is active (covers mobile quirks)
-      setInterval(() => {
-        wrap.classList.toggle("expand", document.activeElement === iframe);
-      }, 200);
-
-      // Click on the bubble wrapper (not inside iframe) → toggle 3x
-      document.addEventListener("click", function (e) {
-        const w = e.target && e.target.closest ? e.target.closest("#heygen-streaming-embed") : null;
-        if (w) w.classList.toggle("fullsize");
+      // Click outside panel to close
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
       });
 
-      // --- The blocks below are Heygen-specific. Safe to keep; likely won't trigger for LiveAvatar. ---
-
-      // Handle Heygen init/show/hide events (no-op for LiveAvatar unless they send same messages)
-      window.addEventListener("message", function (e) {
-        if (e.source !== iframe.contentWindow) return;
-        const d = e.data;
-        if (d && d.type === "streaming-embed") {
-          if (d.action === "init")  wrap.classList.add("show");
-          if (d.action === "show")  wrap.classList.add("expand");
-          if (d.action === "hide")  wrap.classList.remove("expand");
-        }
+      // ESC to close
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("show")) closeModal();
       });
-
-      // Auto 2x while speaking (no-op unless LiveAvatar sends similar events)
-      (function enableTalkingScale(){
-        let deb = null;
-        function setTalk(v){ wrap.classList.toggle("talking", v); }
-        window.addEventListener("message", function (e) {
-          if (e.source !== iframe.contentWindow) return;
-          let d = e.data;
-          if (typeof d === "string") { try { d = JSON.parse(d); } catch {} }
-          const raw = (d && (d.type || d.event || d.name || (d.detail && (d.detail.type || d.detail.event)))) || "";
-          const t = String(raw).toUpperCase();
-
-          const start = t === "AVATAR_START_TALKING" || t === "TALKING_START" || t === "AVATAR.TALKING_START" || raw === "avatar_start_talking";
-          const stop  = t === "AVATAR_STOP_TALKING"  || t === "TALKING_END"   || t === "AVATAR.TALKING_STOP"  || raw === "avatar_stop_talking";
-          const tick  = t === "AVATAR_TALKING_MESSAGE" || raw === "avatar_talking_message";
-
-          if (start) setTalk(true);
-          else if (stop) setTalk(false);
-          else if (tick) { setTalk(true); clearTimeout(deb); deb = setTimeout(function(){ setTalk(false); }, 900); }
-        });
-      })();
     })();
   </script>
 </body>
