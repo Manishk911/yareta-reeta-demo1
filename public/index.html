@@ -26,7 +26,7 @@
     h1{font-size:1.5rem;margin:0}
     p{font-size:1rem;max-width:520px;line-height:1.5;margin:.75rem auto 0;opacity:.9}
 
-    /* --- Simple "Start here" launcher --- */
+    /* Launcher */
     #reta-launcher{
       position:fixed; left:24px; bottom:24px; z-index:9999;
       display:flex; align-items:center; gap:10px;
@@ -54,7 +54,7 @@
     #reta-launcher .text strong{ font-size:.95rem; }
     #reta-launcher .text span{ font-size:.78rem; opacity:.85; }
 
-    /* --- Modal overlay --- */
+    /* Modal */
     #reta-modal{
       position:fixed; inset:0; z-index:10000;
       display:none;
@@ -75,7 +75,7 @@
       border:1px solid rgba(255,255,255,.14);
     }
 
-    /* 16:9 stage for the iframe */
+    /* 16:9 stage */
     #reta-stage{
       width:100%;
       aspect-ratio:16/9;
@@ -86,6 +86,7 @@
       height:100%;
       border:0;
       display:block;
+      background:#000;
     }
 
     /* Top bar */
@@ -93,7 +94,7 @@
       display:flex; align-items:center; justify-content:space-between;
       position:absolute; left:0; right:0; top:0;
       padding:12px 14px;
-      pointer-events:none; /* allow iframe clicks */
+      pointer-events:none;
     }
     #reta-title{
       pointer-events:none;
@@ -115,7 +116,7 @@
     }
     #reta-close:hover{ background:rgba(255,255,255,.08); }
 
-    /* Mobile: fullscreen */
+    /* Mobile fullscreen */
     @media (max-width:640px){
       #reta-modal .panel{
         width:100vw; height:100vh;
@@ -127,20 +128,15 @@
       }
       #reta-title{ display:none; }
     }
-
-    @media (prefers-reduced-motion:reduce){
-      #reta-launcher{ transition:none; }
-    }
   </style>
 </head>
 
 <body>
   <main>
-    <h1>Meet Reta — Uncovering what makes people exceptional</h1>
+    <h1>Meet Reta</h1>
     <p>Tap <b>Start here</b> to chat. I’ll ask 3 quick questions to help build your profile.</p>
   </main>
 
-  <!-- Launcher -->
   <button id="reta-launcher" type="button" aria-haspopup="dialog" aria-controls="reta-modal">
     <span id="reta-dot" aria-hidden="true"></span>
     <span class="text">
@@ -149,18 +145,9 @@
     </span>
   </button>
 
-  <!-- Modal -->
   <div id="reta-modal" role="dialog" aria-modal="true" aria-label="Reta module">
     <div class="panel">
-      <div id="reta-stage">
-        <!-- ✅ NEW EMBED LINK -->
-        <iframe
-          src="https://embed.liveavatar.com/v1/477b0ae2-9285-47f4-9833-6146c8fbcad7"
-          allow="microphone"
-          title="LiveAvatar Embed"
-          style="aspect-ratio: 16/9;"
-        ></iframe>
-      </div>
+      <div id="reta-stage"><!-- iframe injected here --></div>
 
       <div id="reta-bar">
         <div id="reta-title">Reta — Start here</div>
@@ -171,26 +158,51 @@
 
   <script>
     (function(){
+      // ✅ Your LiveAvatar embed URL
+      const LIVEAVATAR_URL = "https://embed.liveavatar.com/v1/477b0ae2-9285-47f4-9833-6146c8fbcad7";
+
       const launcher = document.getElementById("reta-launcher");
       const modal = document.getElementById("reta-modal");
       const closeBtn = document.getElementById("reta-close");
+      const stage = document.getElementById("reta-stage");
+
+      function mountIframe(){
+        // Always start a fresh session (prevents "Session disconnected" after hiding/idle)
+        stage.innerHTML = "";
+
+        const iframe = document.createElement("iframe");
+        iframe.title = "LiveAvatar Embed";
+        iframe.allow = "microphone; autoplay; camera; clipboard-read; clipboard-write;";
+        iframe.referrerPolicy = "origin-when-cross-origin";
+
+        // Cache-bust so provider doesn't reuse a stale session
+        iframe.src = LIVEAVATAR_URL + (LIVEAVATAR_URL.includes("?") ? "&" : "?") + "_ts=" + Date.now();
+
+        stage.appendChild(iframe);
+      }
+
+      function unmountIframe(){
+        stage.innerHTML = ""; // kills the session cleanly
+      }
 
       function openModal(){
         modal.classList.add("show");
         document.documentElement.style.overflow = "hidden";
         document.body.style.overflow = "hidden";
+        mountIframe();
       }
 
       function closeModal(){
         modal.classList.remove("show");
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
+        unmountIframe();
       }
 
       launcher.addEventListener("click", openModal);
       closeBtn.addEventListener("click", closeModal);
 
-      // Click outside the panel closes
+      // Click outside panel closes
       modal.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
       });
